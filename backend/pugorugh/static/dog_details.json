@@ -122,6 +122,7 @@
   {
     "name": "Prince",
     "image_filename": "16.jpg",
+    "breed": "Jindo",
     "age": 81,
     "gender": "m",
     "size": "s"

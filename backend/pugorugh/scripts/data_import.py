@@ -6,7 +6,7 @@ import sys
 import django
 
 PROJ_DIR = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
-
+print(PROJ_DIR)
 
 def load_data():
     filepath = path.join(PROJ_DIR, 'pugorugh', 'static', 'dog_details.json')
@@ -17,6 +17,7 @@ def load_data():
         if serializer.is_valid():
             serializer.save()
         else:
+            print(serializer.data)
             print(serializer.errors)
 
     print('load_data done.')

@@ -14,7 +14,7 @@ AGES = (("b", "baby"), ("y", "young"), ("a", "adult"), ("s", "senior"))
 
 class Dog(models.Model):
     name = models.CharField(max_length=500,)
-    image_filename = models.ImageField()
+    image_filename = models.CharField(max_length=500)
     breed = models.CharField(max_length=500,)
     age = models.IntegerField()
     gender = models.CharField(max_length=500, choices=GENDERS)
@@ -28,7 +28,7 @@ class UserDog(models.Model):
 
 
 class UserPref(models.Model):
-    user = models.OneToOneField(User, on_delete='cascade')
+    user = models.OneToOneField(User, on_delete='protect')
     age = models.CharField(max_length=500, choices=AGES)
     gender = models.CharField(max_length=500, choices=GENDERS)
     size = models.CharField(max_length=500, choices=SIZES)
