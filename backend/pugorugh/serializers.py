@@ -48,3 +48,14 @@ class UserPrefSerializer(serializers.ModelSerializer):
             'size',
         )
         model = models.UserPref
+
+
+class UserDog(serializers.ModelSerializer):
+
+    class Meta:
+        fields = (
+            'dog',
+            'user',
+            'status',
+        )
+        model = models.UserDog
