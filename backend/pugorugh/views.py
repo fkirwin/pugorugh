@@ -74,41 +74,48 @@ class NextLikedDog(RetrieveAPIView):
 
 class NextDislikedDog(APIView):
     '''
-    Using generic view.  Also used the associative table to handle the dog getting.
+    Using APIView, the most top level implementation.  Also used the associative table to handle the dog getting.
     '''
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request, pk, format=None):
         next_record = pk + 1
-        dogs = models.UserDog.objects.filter(status__icontains='d').filter(user_id=self.request.user.id).order_by('id').all()
+        dogs = models.UserDog.objects.filter(status__icontains='d') \
+            .filter(user_id=self.request.user.id) \
+            .order_by('id').all()
         try:
             next_pref = dogs.get(dog_id=next_record)
+            serializer = serializers.DogSerializer(next_pref.dog)
         except:
             next_pref = dogs.first()
             if next_pref:
-                return next_pref.dog
+                serializer = serializers.DogSerializer(next_pref.dog)
             else:
                 raise NotFound
-        else:
-            serializer = serializers.DogSerializer(next_pref.dog, many=True)
-            return Response(serializer.data)
+        return Response(serializer.data)
+
+
 
 
 class NextUndecidedDog(RetrieveModelMixin, GenericAPIView):
+    """
+    Attempting to use a mixin with genericAPI view.
+    """
     permission_classes = (permissions.AllowAny,)
     serializer_class = serializers.DogSerializer
-    queryset = models.Dog.objects.order_by('id').all()
 
     def get_queryset(self):
-        return self.queryset.exclude(id__in=models.UserDog.objects.filter(user_id=self.request.user.id).all())
+        return models.Dog.objects\
+                                 .exclude(id__in=models.UserDog.objects.filter(user_id=self.request.user.id).all())\
+                                 .order_by('id').all()
 
     def get_object(self):
         next_record = self.kwargs.get('pk')+1
         try:
-            next_dog = self.queryset.get(id=next_record)
+            next_dog = self.get_queryset().get(id=next_record)
             return next_dog
         except:
-            next_dog = self.queryset.first()
+            next_dog = self.get_queryset().first()
             if next_dog:
                 return next_dog
             else:
@@ -120,19 +127,22 @@ class NextUndecidedDog(RetrieveModelMixin, GenericAPIView):
 
 ##And now for some clean inheritance
 
-class CoreDogs(RetrieveUpdateAPIView, CreateAPIView):
+class CoreDogs(RetrieveModelMixin, CreateModelMixin, GenericAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = serializers.DogSerializer
     queryset = models.Dog.objects.order_by('id').all()
 
-
-class ChangeUndecidedDog(CoreDogs):
-
     def get_object(self):
         return get_object_or_404(self.get_queryset())
 
+
+class ChangeUndecidedDog(CoreDogs):
+    """
+    Stab at inheritence with these views.
+    """
     def get_queryset(self):
         try:
+            #Exclude dogs which have a decision for the user and then get the dog.
             self.queryset.exclude(id__in=models.UserDog.objects.filter(user_id=self.request.user.id).get(id=self.kwargs.get('pk')))
         except:
             raise NotFound
@@ -140,5 +150,39 @@ class ChangeUndecidedDog(CoreDogs):
     def post(self, request, *args, **kwargs):
         decision = models.UserDog(dog=self.queryset.get(id=self.kwargs.get('pk')), user_id=self.request.user.id, status=request.data['status'])
         decision.save()
-        serializer = serializers.UserDog(decision)
+        serializer = serializers.UserDogSerializer(decision)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ChangeDecidedDog(CoreDogs):
+
+    def get_queryset(self):
+        try:
+            #Exclude dogs which have a decision for the user and then get the dog.
+            self.queryset.get(id=self.kwargs.get('pk'))
+        except:
+            raise NotFound
+
+    def put(self, request, *args, **kwargs):
+        decision = models.UserDog.objects\
+                                 .filter(dog_id=self.kwargs.get('pk'))\
+                                 .filter(user_id=self.request.user.id)\
+                                 .get()
+        serializer = serializers.UserDogSerializer(decision, data=request.data, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    '''
+        decision = models.UserDog.objects\
+                                 .filter(dog_id=self.kwargs.get('pk'))\
+                                 .filter(user_id=self.request.user.id)\
+                                 .get()
+        decision.status = request.data['status']
+        #decision.save()
+        print(decision.__dict__)
+        serializer = serializers.UserDogSerializer(data=decision.__dict__)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    '''

@@ -6,7 +6,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from rest_framework.authtoken.views import obtain_auth_token
 from rest_framework import routers
 
-from pugorugh.views import UserRegisterView, UserPreferenceSaveView, NextLikedDog, NextDislikedDog, AllDogs, NextUndecidedDog, ChangeUndecidedDog
+from pugorugh.views import UserRegisterView, UserPreferenceSaveView, NextLikedDog, NextDislikedDog, AllDogs, NextUndecidedDog, ChangeUndecidedDog, ChangeDecidedDog
 
 router = routers.SimpleRouter()
 router.register(r'dogs', AllDogs)
@@ -26,4 +26,6 @@ urlpatterns = format_suffix_patterns([
     path('api/dog/<int:pk>/disliked/next/', NextDislikedDog.as_view()),
     path('api/dog/<int:pk>/undecided/next/', NextUndecidedDog.as_view()),
     path('api/dog/<int:pk>/undecided/', ChangeUndecidedDog.as_view()),
+    path('api/dog/<int:pk>/liked/', ChangeDecidedDog.as_view()),
+    path('api/dog/<int:pk>/disliked/', ChangeDecidedDog.as_view()),
 ])

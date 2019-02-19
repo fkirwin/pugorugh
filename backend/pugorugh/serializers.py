@@ -50,7 +50,7 @@ class UserPrefSerializer(serializers.ModelSerializer):
         model = models.UserPref
 
 
-class UserDog(serializers.ModelSerializer):
+class UserDogSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = (

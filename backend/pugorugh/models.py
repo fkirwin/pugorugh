@@ -26,6 +26,8 @@ class UserDog(models.Model):
     dog = models.OneToOneField(Dog, on_delete='cascade')
     status = models.CharField(max_length=500, choices=STATUSES)
 
+    class Meta:
+        unique_together = (('user', 'dog'),)
 
 class UserPref(models.Model):
     user = models.OneToOneField(User, on_delete='protect')
